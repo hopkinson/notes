@@ -1,0 +1,161 @@
+# 前端的docker笔记
+
+>Docker 大家应该都听过，不过可能对于我们前端来说用得比较少，后端开发和运维应该是对它很了解了。
+
+前端部署的发展离不开 devops 的发展，而 devops 又得益于 docker 的发展。因此，前端掌握 docker 也势在必行。
+docker 使应用部署更加轻量，可移植，可扩展。更好的环境隔离也更大程度地避免了生产环境与测试环境不一致的巨大尴尬。由于 docker 轻便可移植的特点也极大促进了 CI/CD 的发展。
+
+
+
+## Docker 存在的意义
+* 加速本地开发和构建，开发人员可以构建、运行并分享Docker容器，容器可以在开发环境中构建，然后轻松地提交到测试环境中，并最终进入生产环境
+* 能够让独立服务或应用程序在不同环境中，得到相同的运行结果。
+* 用 Docker 创建隔离环境进行测试
+* Docker 可以让开发者先在本机上构建一个复杂的程序测试，而不是一开始就在生产环境进行测试
+
+对于我们前端来说，这样比较好理解：构建好的镜像只要就是 `package.json`，里面只要写好需要的包名和版本号，任何人拿到这份文件都可以获取对应的包，并且能够运行这个程序。
+
+但是，我们忘了一个很重要的点，Node 和 npm 也是有版本的啊!举个例子，Node 在 7.x 以上才支持 `async` ，如果我们的服务器上 Node 的版本是 4.x ，那么部署上去肯定是不行的，然后查个半天 BUG ，才发现是 Node 版本的问题。
+
+Docker 就是帮我们解决这种问题的，它能够把 Node 版本也能够像 `package.json` 那样记录在配置文件中。
+
+## Docker概念
+* Docker 客户端和服务器: https://docs.docker.com/engine/installation/
+* Docker 镜像: 用户基于镜像来运行自己的容器，可以把镜像当做容器的『源代码』，镜像体积很小，易于分享、存储和更新
+* Registry: Docker 用 Registry 保存用户构建的镜像，Registry 分为公共和私有两种:
+  
+  * Docker 公司运营的公共 Registry 叫做 Docker Hub，我们可以在上面注册账号，分享并保存自己的镜像。
+  * 也可以在 Docker Hub 保存自己的私有镜像或者架设自己私有的 Registry
+  * Docker 容器: 把应用程序或服务打包放进去，容器是基于镜像启动的，容器中可以运行一个或多个进程。
+  * 镜像是 Docker 生命周期中的构建或打包阶段
+  * 容器则是启动或执行阶段
+
+## Docker 常用命令
+### 容器
+* 判断 docker 是否能正常工作
+
+  ```shell
+  docker info # 返回所有容器和镜像的数量、基本配置等
+  ```
+  
+* 运行容器
+  ```shell
+  docker run image-name
+  ```
+  
+  
+  比如 `docker run ubuntu`，会先检查本地是否存在 ubuntu 镜像，如果本地没有该镜像的话，那么 Docker 就会查看 Docker Hub 中是否有该镜像，找到的话就会下载该镜像并将其保存到本地。
+  随后，Docker 在文件系统内部用这个镜像创建了一个新容器，该容器拥有自己的网络、IP地址，以及一个用来和宿主机进行通信的桥接网络接口。
+  
+* 使用容器
+  ```
+  docker run -t -i ubuntu
+  ``` 
+  
+  会进入容器，然后 `exit` 离开容器，容器就停止运行了。
+  -i: Keep STDIN open even if not attached
+  -t: Allocate a pseudo-tty
+  
+  但容器还是存在的，`docker ps -a` 查看所有容器（正在运行的、已经停止的）
+  `docker ps` 只会列出正在运行的容器。
+* 容器命名
+  Docker 会为每一个容器自动生成一个随机 id，我们也可以自己为容器指定名称。
+  
+  ```
+  docker run --name your_container_name -i -t ubuntu
+  ```
+  容器名称不允许同名，可以使用 `docker rm` 删除同名容器。
+  
+  
+* 重新启动已经停止的容器
+
+  ```
+  docker start your_container_name / your_container_id
+  docker restart your_container_name / your_container_id
+  ```
+  
+* 获取信息
+  
+  ```
+  docker inspect your_container_name / your_container_id
+  ```
+  
+* 附着到容器（重新启动并运行一个交互式会话shell）
+
+  ```
+  docker attach your_container_name
+  ```
+  
+* 守护容器
+
+  ```shell
+  docker run -d your_container_name #创建守护容器
+  docker top your_container_name #查看容器内进程
+  docker exec your_container_name touch a.txt #在容器内部运行进程
+  docker stop your_container_name #停止容器
+  ```
+  
+* 删除容器
+
+  ```
+  docker rm your_container_name/id
+  ```
+
+### 镜像
+* 列出镜像
+  ```
+  docker images
+  ```
+* 拉取镜像
+  ```
+  docker pull
+  ```
+  
+  
+  docker store 上每个镜像都有很多个标签
+  `docker pull ubuntu:12.04` 表示拉取 12.04 这个标签
+* 构建镜像(Dockerfile + docker build)
+  一般来说，我们不是真正地创建新镜像，而是基于一个已有的基础镜像，构建新镜像而已。
+  
+  
+  ```dockerfile
+  FROM ...
+  
+  RUN ...
+  
+  # 指定容器内的程序将会使用容器的指定端口
+  # 配合 docker run -p
+  EXPOSE ...
+  ```
+  
+  
+  
+  * RUN: 指定镜像被构建时要运行的命令
+  * CMD: 指定容器被启动时要运行的命令
+  * ENTRYPOINT: 同 CMD ，但不会被 docker run -t 覆盖
+  * WORKDIR: CMD/ENTRYPOINT 会在这个目录下执行
+  * VOLUME
+  * ADD
+  * COPY
+  
+  ```
+  docker history images [name]
+  ```
+* 从新镜像启动容器
+  ```
+  docker run -d -p 4000:80 --name [name]
+  ```
+  
+  
+  可以在 Dokcer 宿主机上指定一个具体的端口映射到容器的80端口上
+* 推送镜像
+  ```
+  docker push [user_name]/[image_name]
+  ```
+* 删除镜像
+  ```
+  docker rmi [user_name]/[image_name]
+  ```
+
+## 总结
+最近公司前端项目都往docker部署，也碰了一下壁，不过有运维大神在旁边指导逐渐能完成流程，加上接触 Docker 的时间很短，所以这是阅读docker相关资料做的笔记。
