@@ -34,7 +34,7 @@
 例子：平台 platform 相关的方法： platform_utils.dart
 
 provider： **(业务)\_model.dart**
-例子：回收相关的 provider： provider_model.dart
+例子：回收相关的 provider： recycle_model.dart
 
 ##### 全局组件命名
 
@@ -116,9 +116,9 @@ class Recycle {
 
 模块分为两个部分：
 
-![2020-07-17-11-35-48](http://qn.cawsct.com/2020-07-17-11-35-48.png)
+![2020-07-20-10-14-04](http://qn.cawsct.com/2020-07-20-10-14-04.png)
 
-1. widges 部分： 页面用到的组件
+1. widgets 部分： 页面用到的组件
 2. provider 部分： 状态管理部分——接口，定义的数据
 3. 页面部分： 拼接 widgets 和引用 provider
 
