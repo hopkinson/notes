@@ -1,0 +1,92 @@
+# 引入第三方字体体积太大的问题
+
+## 背景
+
+在做营销活动的时候，设计稿这边使用了"思源"的字体。为了统一整个页面的字体风格，于是就把用到的字体引进来项目，但是最后发现字体大小竟然达到了 14MB，加载时间为3.74秒，可以预想到加载时间会进一步增长。如果用户还处于弱网环境下，这个等待时间是不能接受的。
+
+![2021-02-04-16-37-19](http://qn.cawsct.com/2021-02-04-16-37-19.png)
+
+## 解决方法 - font-spider
+
+font-spider通过分析本地的CSS与HTML文件获取字体中**没有使用的字符**，并把这些字符数据从字体中删除以实现压缩，同时生成跨浏览器使用的格式。
+
+
+### 用法
+
+1. 全局安装
+
+```shell
+npm i font-spider -g
+```
+
+2. 新建一个项目
+
+项目里放入字体，**字体一定是ttf格式**，并使用css文件引入字体，并在html里引入
+
+![2021-02-04-16-52-48](http://qn.cawsct.com/2021-02-04-16-52-48.png)
+
+index.html
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="./index.css" />
+    <style>
+      .test {
+        font-family: "SourceHanSerifCN-Light";
+      }
+    </style>
+    <title>Document</title>
+  </head>
+  <body>
+    <div class="test">
+      表达爱有五种语言， 你是属于哪一种呢？ click P2（引导页）
+      你是不是总觉爱而不得？ 在亲密关系理论里，爱有五种语言： A肯定言语
+      B精心时刻 C接受礼物 D服务行动 E肢体接触
+      如果你觉得自己做的对方总不领情，或者对方说爱你你却感觉不到，可能是你们爱的语言出现偏差，也即爱的方式不一致，你知道自己爱的语言吗？
+      马上来测试 P3~P12（问题页，2道问题为1页）
+      单选出新最合适的选项，别纠结，遵循内心第一选择。（每个问题页都有）
+    </div>
+  </body>
+</html>
+```
+
+index.css
+
+```css
+@font-face {
+  font-family: "SourceHanSerifCN-Light";
+  src: url("./SourceHanSerifCN.ttf");
+}
+
+```
+
+
+1. 终端使用命令压缩
+
+```shell
+font-spider index.html
+```
+
+4. 输出成功
+
+![2021-02-04-16-57-22](http://qn.cawsct.com/2021-02-04-16-57-22.png)
+
+会发现会把10几兆的字体文件变成40多KB，因为他把多余的文字去掉了，只提取我们页面出现的那些文字。
+![2021-02-04-16-58-13](http://qn.cawsct.com/2021-02-04-16-58-13.png)
+
+
+
+
+### 缺点
+
+font-slider虽然好用,但是由于其原理是直接分析本地 CSS 与 HTML 文件获取没有WebFont中没有使用过的字符,这样一来,对于动态生成的文字,就没有办法使用font-slider了.这是个坏消息!尤其在当下,很多框架都是数据驱动的,更是很多文字都不会直接出现html文件中.对于这种情况, 其他工具**fontmin**或许能解决.
+
+## 最后
+
+通过font-spider把页面上出现的文字处理了一次，体积和加载时间都缩短了很多。
+
+![2021-02-04-17-02-49](http://qn.cawsct.com/2021-02-04-17-02-49.png)
